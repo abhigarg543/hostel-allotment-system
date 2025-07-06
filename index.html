@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPU Hostel Allotment System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section with Centered Logo -->
+        <div class="header">
+            <div class="logo">
+                <img src="lpulogo.png" alt="LPU Logo" class="logo-img-horizontal">
+                <div class="logo-text-horizontal">
+                    <h1>LPU</h1>
+                    <h2>Hostel Allotment System</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Section -->
+        <div class="login-container">
+            <div class="login-box">
+                <h2>Welcome to LPU Hostel Allotment</h2>
+                <p class="subtitle">Please login to access your hostel application</p>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter your password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="captcha">CAPTCHA</label>
+                        <div class="captcha-container">
+                            <div class="captcha-box">
+                                <span id="captchaText"></span>
+                            </div>
+                            <button type="button" id="refreshCaptcha" class="refresh-btn">↻</button>
+                        </div>
+                        <input type="text" id="captcha" placeholder="Enter CAPTCHA" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Login</button>
+                </form>
+
+                <div class="login-footer">
+                    <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+                    <a href="#" onclick="showHelp()">Need Help?</a>
+                    <div class="helpline">
+                        <strong>LPU Helpline:</strong> +91-1832-497-445
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Reset Password</h3>
+            <form id="resetForm">
+                <div class="form-group">
+                    <label for="resetEmail">Email Address</label>
+                    <input type="email" id="resetEmail" placeholder="Enter your email" required>
+                </div>
+                <button type="submit" class="btn-primary">Send Reset Link</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div id="messageContainer"></div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
