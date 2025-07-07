@@ -53,7 +53,7 @@ public class HostelAllotmentSystem {
             return false; // Student already exists
         }
         
-        Student student = new Student(rollNo, name, email, department, year);
+        Student student = new Student(Student ID, name, email, department, year);
         students.put(rollNo, student);
         return true;
     }
@@ -75,18 +75,18 @@ public class HostelAllotmentSystem {
      * Submit hostel application
      */
     public boolean submitApplication(String rollNo, String roomType, String hostelBlock, String phone) {
-        Student student = students.get(rollNo);
+        Student student = students.get(Student ID);
         if (student == null) {
             return false; // Student not found
         }
         
         // Check if application already exists
-        if (applications.containsKey(rollNo)) {
+        if (applications.containsKey(Student ID)) {
             return false; // Application already submitted
         }
         
         Application application = new Application(student, roomType, hostelBlock, phone);
-        applications.put(rollNo, application);
+        applications.put(Student ID, application);
         allocationQueue.offer(application);
         
         return true;
