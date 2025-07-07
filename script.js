@@ -41,18 +41,22 @@ function setupEventListeners() {
 }
 
 // ================== USER DATA HELPERS ==================
-function getUserData(email) {
-    return JSON.parse(localStorage.getItem('user_' + email) || '{}');
+function getUserData(key) {
+    const prefix = /^\d{8}$/.test(key) ? 'user_id_' : 'user_';
+    return JSON.parse(localStorage.getItem(prefix + key) || '{}');
 }
 
-function saveUserData(email, data) {
-    localStorage.setItem('user_' + email, JSON.stringify(data));
+function saveUserData(key, data) {
+    const prefix = /^\d{8}$/.test(key) ? 'user_id_' : 'user_';
+    localStorage.setItem(prefix + key, JSON.stringify(data));
 }
 
+
+// ================== LOGIN ==================
 // ================== LOGIN ==================
 function handleLogin(event) {
     event.preventDefault();
-    const email = document.getElementById('email').value.trim();
+    const emailInput = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const captcha = document.getElementById('captcha').value;
 
@@ -63,30 +67,38 @@ function handleLogin(event) {
         return;
     }
 
-    const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-    const hasEightDigits = /\d{8}/;
+    const isEightDigitID = /^\d{8}$/.test(emailInput);
+    const isValidEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailInput);
 
-    if (gmailPattern.test(email) && hasEightDigits.test(email) && password.length > 0) {
-        let userData = getUserData(email);
-        if (!userData.email) {
-            userData = { email, name: '', rollNo: '', application: false, allocated: false };
+    if (isEightDigitID || isValidEmail) {
+        let userData = getUserData(emailInput);
+
+        if (!userData.email && isValidEmail) {
+            userData = { email: emailInput, name: '', rollNo: '', application: false, allocated: false };
+        } else if (!userData.id && isEightDigitID) {
+            userData = { email: '', id: emailInput, name: '', application: false, allocated: false };
         }
+
         currentUser = userData;
         sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
         showDashboard();
         return;
     }
 
-    if (studentDatabase[email] && studentDatabase[email].password === password) {
+    if (studentDatabase[emailInput] && studentDatabase[emailInput].password === password) {
         currentUser = {
-            email: email,
-            name: studentDatabase[email].name,
-            rollNo: studentDatabase[email].rollNo
+            email: emailInput,
+            name: studentDatabase[emailInput].name,
+            rollNo: studentDatabase[emailInput].rollNo
         };
+
+        // ✅ Store admin profile
+        saveUserData(emailInput, currentUser);
+
         sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
         showDashboard();
     } else {
-        showError('Invalid email or password. Please use a Gmail with 8-digit number or valid admin credentials.');
+        showError('Invalid email or ID. Please try again.');
         generateCaptcha();
         document.getElementById('captcha').value = '';
     }
@@ -108,34 +120,56 @@ function handlePasswordReset(event) {
 // ================== DASHBOARD ==================
 function showDashboard() {
     const container = document.querySelector('.container');
-    let userData = getUserData(currentUser.email);
-    let allocationStatus = '';
+    let key = currentUser.email || currentUser.id;
+    let userData = getUserData(key);
 
+    if ((!userData || !userData.name) && currentUser) {
+        userData = currentUser;
+    }
+
+    let allocationStatus = '';
     if (userData && userData.application) {
         allocationStatus = `<div class='allocation-status'><strong>Status:</strong> ✅ Hostel Allocated</div>`;
     }
 
+    let statusLabel = '';
+    if (userData.status) {
+        statusLabel = `<div class='allocation-status'><strong>Admin Status:</strong> ${userData.status}</div>`;
+    }
+
     container.innerHTML = `
         <div class="header">
-            <div class="logo">
-                <img src="lpulogo.png" alt="LPU Logo" class="logo-img">
-                <div class="logo-text">
-                    <h1>LPU</h1>
-                    <h2>Hostel Allotment System</h2>
-                </div>
-            </div>
+    <div class="logo">
+        <img src="lpulogo.png" alt="LPU Logo" class="logo-img">
+        <div class="logo-text">
+            <h1>Admin</h1>
+            <h2>Hostel Allotment - LPU</h2>
         </div>
+    </div>
+    ${
+        currentUser.email === 'admin@lpu.in' ? `
+        <div class="admin-panel-link">
+            <a href="admin.html" class="btn-primary">🔐 Go to Admin Panel</a>
+        </div>` : ''
+    }
+</div>
+
 
         <div class="dashboard">
             <div class="dashboard-header">
-                <h2>Welcome, ${userData.name || 'New Student'}</h2>
+                <h2>${
+                    currentUser.email === 'admin@lpu.in'
+                        ? (userData.application ? 'Welcome back, Sir' : 'Welcome, Sir')
+                        : (userData.application ? `Welcome back, ${userData.name || 'Student'}` : 'Welcome, New Student')
+                }</h2>
                 <div class="user-info">
                     <div class="user-avatar">${(userData.name || 'N').charAt(0)}</div>
-                    <span>${currentUser.email}</span>
+                    <span>${currentUser.email || currentUser.id}</span>
                     <button class="logout-btn" onclick="logout()">Logout</button>
                 </div>
             </div>
             ${allocationStatus}
+            ${statusLabel}
             <div class="progress-container">
                 <h3>Application Progress</h3>
                 <div class="progress-bar">
@@ -268,11 +302,12 @@ function handlePersonalInfo(event) {
         phone: document.getElementById('phone').value,
         emergencyContact: document.getElementById('emergencyContact').value
     };
-    let userData = getUserData(currentUser.email);
+    let key = currentUser.email || currentUser.id;
+    let userData = getUserData(key);
     userData.name = data.fullName;
     userData.rollNo = data.rollNumber;
     userData.personalInfo = data;
-    saveUserData(currentUser.email, userData);
+    saveUserData(key, userData);
     document.getElementById('personalInfoSection').style.display = 'none';
     document.getElementById('roomPreferencesSection').style.display = 'block';
     updateProgress(2);
@@ -285,9 +320,10 @@ function handleRoomPreferences(event) {
         floorPreference: document.getElementById('floorPreference').value,
         disabilityAccess: document.getElementById('disabilityAccess').checked
     };
-    let userData = getUserData(currentUser.email);
+    let key = currentUser.email || currentUser.id;
+    let userData = getUserData(key);
     userData.roomPreferences = data;
-    saveUserData(currentUser.email, userData);
+    saveUserData(key, userData);
     document.getElementById('roomPreferencesSection').style.display = 'none';
     document.getElementById('reviewSection').style.display = 'block';
     updateProgress(3);
@@ -314,11 +350,11 @@ function showReview(userData) {
 
 function submitApplication() {
     showSuccess('Application submitted successfully!');
-
-    let userData = getUserData(currentUser.email);
+    let key = currentUser.email || currentUser.id;
+    let userData = getUserData(key);
     userData.application = true;
     userData.allocated = true;
-    saveUserData(currentUser.email, userData);
+    saveUserData(key, userData);
 
     setTimeout(() => {
         window.location.reload();
