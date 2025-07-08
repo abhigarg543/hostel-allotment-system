@@ -572,3 +572,34 @@ body {
     font-size: 1.2rem;
     letter-spacing: 1px;
 }
+.notification-bell {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    position: fixed;
+    z-index: 999;
+}
+
+.notification-dropdown {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+    width: 280px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 1000;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.notification-dropdown p {
+    margin: 0;
+    padding: 5px 0;
+    font-size: 14px;
+    color: #444;
+}
